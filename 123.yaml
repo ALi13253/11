@@ -52,7 +52,6 @@ proxy-providers:
     type: http
     url: http://64.112.40.112:20357/354a4335-7feb-4c30-b013-50d1812ee697/proxies
     interval: 3600
-    filter: ".*:.*"
     health-check:
       enable: false
       url: https://www.gstatic.com/generate_204
