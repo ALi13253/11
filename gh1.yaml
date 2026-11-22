@@ -1,0 +1,112 @@
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: rule
+log-level: info
+ipv6: true
+external-controller: 127.0.0.1:10000
+experimental:
+  ignore-resolve-fail: true
+sniffer:
+  enable: true
+  override-destination: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+      override-destination: true
+    QUIC:
+      ports: [443, 8443]
+      override-destination: true
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: redir-host
+  use-hosts: true
+  default-nameserver:
+    - 223.5.5.5
+    - 1.12.12.12
+  nameserver:
+    - 223.5.5.5
+    - 1.12.12.12
+  fallback:
+    - https://dns.google/dns-query
+    - https://1.1.1.1/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+proxy-providers:
+  所有节点:
+    type: http
+    url: https://mirror.ghproxy.com/http://64.112.40.112:20357/354a4335-7feb-4c30-b013-50d1812ee697/proxies
+    interval: 3600
+    header:
+      User-Agent:
+        - "Mihomo-Meta/1.18.0"
+    health-check:
+      enable: false
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+  仅IPv6节点:
+    type: http
+    url: https://mirror.ghproxy.com/http://64.112.40.112:20357/354a4335-7feb-4c30-b013-50d1812ee697/proxies
+    interval: 3600
+    filter: "^\\[.*\\]"
+    header:
+      User-Agent:
+        - "Mihomo-Meta/1.18.0"
+    health-check:
+      enable: false
+      url: https://www.gstatic.com/generate_204
+      interval: 300
+  reject:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
+    path: ./ruleset/reject.yaml
+    interval: 86400
+proxies:
+proxy-groups:
+  - name: 节点选择
+    type: select
+    proxies: ['自动选择', DIRECT]
+    use: ['仅IPv6节点']
+  - name: 自动选择
+    type: url-test
+    url: http://cp.cloudflare.com/generate_204
+    interval: 300
+    tolerance: 50
+    use: ['仅IPv6节点']
+  - name: IPv6代理组
+    type: select
+    proxies: [DIRECT, '节点选择', '自动选择']
+    use: ['仅IPv6节点']
+  - name: 免流节点
+    type: select
+    proxies: ['节点选择', '自动选择']
+    use: ['仅IPv6节点']
+  - name: 全球拦截
+    type: select
+    proxies: [REJECT, DIRECT]
+rules:
+  - IP-CIDR,202.118.0.0/19,DIRECT
+  - IP-CIDR,202.199.0.0/20,DIRECT
+  - IP-CIDR,210.30.192.0/20,DIRECT
+  - IP-CIDR,219.216.64.0/18,DIRECT
+  - IP-CIDR,58.154.160.0/19,DIRECT
+  - IP-CIDR,58.154.192.0/18,DIRECT
+  - IP-CIDR,118.202.0.0/19,DIRECT
+  - IP-CIDR,118.202.32.0/20,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,100.64.0.0/10,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,169.254.0.0/16,DIRECT
+  - IP-CIDR,224.0.0.0/4,DIRECT
+  - IP-CIDR6,::/0,IPv6代理组
+  - MATCH,免流节点
